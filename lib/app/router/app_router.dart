@@ -40,6 +40,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      GoRoute(
+        path: AppConstants.cardDetailRoute,
+        name: AppConstants.cardDetailRouteName,
+        builder: (context, state) {
+          final cardId = state.pathParameters['cardId']!;
+          return CardDetailScreen(cardId: cardId);
+        },
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
