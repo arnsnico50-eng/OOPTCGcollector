@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:camera/camera.dart';
 import '../../../data/repositories/card_repository.dart';
+import '../../../data/api/card_api_service.dart';
 import '../../../shared/models/card.dart';
 
 final scannerProvider = StateNotifierProvider<ScannerNotifier, ScannerState>((ref) {
