@@ -283,6 +283,12 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
   void clearScanResult() {
     state = state.copyWith(scanResult: null);
   }
+
+  @override
+  void dispose() {
+    _textRecognizer.close();
+    super.dispose();
+  }
 }
 
 class ScannerState {
