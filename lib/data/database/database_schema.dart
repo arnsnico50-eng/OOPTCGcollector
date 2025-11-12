@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../models/card.dart';
-import '../models/collection.dart';
+import '../../shared/models/card.dart';
+import '../../shared/models/collection.dart';
 
 class DatabaseSchema {
   static const String cardsTable = 'cards_table';
