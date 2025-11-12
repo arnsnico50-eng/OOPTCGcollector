@@ -4,11 +4,126 @@ import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../providers/scanner_provider.dart';
 
-class CameraPreviewWidget extends ConsumerWidget {
+class CameraPreviewWidget extends ConsumerStatefulWidget {
   const CameraPreviewWidget({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CameraPreviewWidget> createState() => _CameraPreviewWidgetState();
+}
+
+class _CameraPreviewWidgetState extends ConsumerState<CameraPreviewWidget>
+    with WidgetsBindingObserver {
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+  bool _hasPermission = false;
+  String _errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final cameraController = _cameraController;
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      cameraController.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      // Check camera permission
+      final permission = await Permission.camera.request();
+      if (!permission.isGranted) {
+        setState(() {
+          _hasPermission = false;
+          _errorMessage = 'Camera permission is required to scan cards';
+        });
+        return;
+      }
+
+      setState(() {
+        _hasPermission = true;
+        _errorMessage = '';
+      });
+
+      // Get available cameras
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        setState(() {
+          _errorMessage = 'No cameras available on this device';
+        });
+        return;
+      }
+
+      // Use back camera by default
+      final camera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      // Initialize camera controller
+      _cameraController = CameraController(
+        camera,
+        ResolutionPreset.high,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.yuv420,
+      );
+
+      await _cameraController!.initialize();
+
+      if (mounted) {
+        setState(() {
+          _isCameraInitialized = true;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to initialize camera: ${e.toString()}';
+      });
+    }
+  }
+
+  Future<void> _captureAndAnalyze() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    try {
+      final image = await _cameraController!.takePicture();
+      // For now, trigger the mock scanning
+      // In a real implementation, you would process the captured image
+      ref.read(scannerProvider.notifier).startScanning();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to capture image: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -17,42 +132,25 @@ class CameraPreviewWidget extends ConsumerWidget {
       ),
       child: Stack(
         children: [
-          // Camera preview would go here
-          // For now, we'll show a placeholder
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[900],
+          // Camera preview or placeholder
+          if (_hasPermission && _isCameraInitialized && _cameraController != null)
+            ClipRRect(
               borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.camera_alt,
-                    size: 80,
-                    color: Colors.white70,
+              child: SizedBox(
+                width: double.infinity,
+                height: double.infinity,
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _cameraController!.value.previewSize!.height,
+                    height: _cameraController!.value.previewSize!.width,
+                    child: CameraPreview(_cameraController!),
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Camera View',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 18,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Position card within frame',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            )
+          else
+            _buildPlaceholder(),
           // Overlay frame for card positioning
           Center(
             child: Container(
