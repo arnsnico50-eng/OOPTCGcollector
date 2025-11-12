@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../shared/models/card.dart';
+import '../../../app/constants/app_constants.dart';
 
 class CardList extends StatelessWidget {
   final List<Card> cards;
