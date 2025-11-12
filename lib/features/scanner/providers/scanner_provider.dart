@@ -12,8 +12,13 @@ final scannerProvider = StateNotifierProvider<ScannerNotifier, ScannerState>((re
 
 class ScannerNotifier extends StateNotifier<ScannerState> {
   final CardRepository _repository;
+  final CardApiService _cardApiService;
+  final TextRecognizer _textRecognizer;
 
-  ScannerNotifier(this._repository) : super(const ScannerState());
+  ScannerNotifier(this._repository)
+      : _cardApiService = CardApiService(),
+        _textRecognizer = GoogleMlKit.vision.textRecognizer(),
+        super(const ScannerState());
 
   Future<void> startScanning() async {
     state = state.copyWith(
