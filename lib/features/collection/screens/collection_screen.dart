@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/collection_provider.dart';
 import '../widgets/collection_stats.dart';
 import '../widgets/collection_grid.dart';
 import '../widgets/empty_collection.dart';
+import '../../../app/constants/app_constants.dart';
 
 class CollectionScreen extends ConsumerStatefulWidget {
   const CollectionScreen({super.key});
