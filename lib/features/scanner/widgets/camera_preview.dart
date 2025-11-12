@@ -151,10 +151,11 @@ class _CameraPreviewWidgetState extends ConsumerState<CameraPreviewWidget>
             )
           else
             _buildPlaceholder(),
-          // Overlay frame for card positioning
-          Center(
-            child: Container(
-              width: 250,
+          // Overlay frame for card positioning (only show when camera is ready)
+          if (_hasPermission && _isCameraInitialized)
+            Center(
+              child: Container(
+                width: 250,
               height: 350,
               decoration: BoxDecoration(
                 border: Border.all(
