@@ -187,7 +187,10 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen>
           ref.read(collectionProvider.notifier).toggleFavorite(cardId);
         },
         onCardTap: (cardId) {
-          Navigator.pushNamed(context, '/card_detail', arguments: cardId);
+          context.pushNamed(
+            AppConstants.cardDetailRouteName,
+            pathParameters: {'cardId': cardId},
+          );
         },
       ),
     );
