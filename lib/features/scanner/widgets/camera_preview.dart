@@ -352,7 +352,7 @@ class _CameraPreviewWidgetState extends ConsumerState<CameraPreviewWidget>
     );
   }
 
-  void _captureAndAnalyze() {
+  void _captureAndAnalyzeButtonPressed() {
     _captureAndAnalyze();
   }
 
