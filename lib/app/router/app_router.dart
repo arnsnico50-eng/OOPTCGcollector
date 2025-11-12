@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod/riverpod.dart';
 
 import '../constants/app_constants.dart';
+import '../../features/card_detail/screens/card_detail_screen.dart';
 import '../../features/collection/screens/collection_screen.dart';
 import '../../features/scanner/screens/scanner_screen.dart';
 import '../../features/search/screens/search_screen.dart';
