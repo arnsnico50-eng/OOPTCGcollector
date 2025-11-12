@@ -28,32 +28,154 @@ class ScannerNotifier extends StateNotifier<ScannerState> {
     );
 
     try {
-      // Simulate scanning process
-      // In a real implementation, this would use ML Kit or camera scanning
+      // For now, simulate scanning process
+      // In a real implementation, this would use camera input
       await Future.delayed(const Duration(seconds: 2));
 
-      // Mock scan result for demonstration
-      final mockResult = ScanResult(
-        cardId: 'OP01-001',
-        cardName: 'Monkey D. Luffy',
-        confidence: 0.95,
-        imageUrl: null,
-        scanTime: DateTime.now(),
-      );
+      // Mock scan result for demonstration - this would be replaced with real text extraction
+      final mockExtractedText = 'OP01-001';
+      final result = await _processExtractedText(mockExtractedText);
 
       state = state.copyWith(
         isScanning: false,
-        scanResult: mockResult,
+        scanResult: result,
       );
 
       // Add to scan history
-      await _addToScanHistory(mockResult);
+      await _addToScanHistory(result);
 
     } catch (e) {
       state = state.copyWith(
         isScanning: false,
         error: 'Scanning failed: ${e.toString()}',
       );
+    }
+  }
+
+  Future<void> processImage(CameraImage cameraImage) async {
+    state = state.copyWith(
+      isScanning: true,
+      error: null,
+      scanResult: null,
+    );
+
+    try {
+      final inputImage = _inputImageFromCameraImage(cameraImage);
+      if (inputImage == null) {
+        state = state.copyWith(
+          isScanning: false,
+          error: 'Failed to process image',
+        );
+        return;
+      }
+
+      final recognizedText = await _textRecognizer.processImage(inputImage);
+      final extractedText = recognizedText.text;
+
+      if (extractedText.isEmpty) {
+        state = state.copyWith(
+          isScanning: false,
+          error: 'No text detected in image',
+        );
+        return;
+      }
+
+      final result = await _processExtractedText(extractedText);
+
+      state = state.copyWith(
+        isScanning: false,
+        scanResult: result,
+      );
+
+      // Add to scan history
+      await _addToScanHistory(result);
+
+    } catch (e) {
+      state = state.copyWith(
+        isScanning: false,
+        error: 'Text extraction failed: ${e.toString()}',
+      );
+    }
+  }
+
+  Future<ScanResult> _processExtractedText(String extractedText) async {
+    // Try to find card ID pattern first
+    final cardIdPattern = RegExp(r'OP\d{2}-\d{3}', caseSensitive: false);
+    final match = cardIdPattern.firstMatch(extractedText);
+
+    if (match != null) {
+      final cardId = match.group(0)!.toUpperCase();
+      return await _createScanResultFromCardId(cardId, 0.95);
+    }
+
+    // If no card ID found, try to search by card name
+    final cleanText = extractedText.replaceAll(RegExp(r'[^\w\s]'), '').trim();
+    if (cleanText.length > 2) {
+      try {
+        final cards = await _cardApiService.searchCards(cleanText, limit: 1);
+        if (cards.isNotEmpty) {
+          return _createScanResultFromCard(cards.first, 0.85);
+        }
+      } catch (e) {
+        // Search failed, continue with fallback
+      }
+    }
+
+    // Fallback: create a scan result with the extracted text
+    return ScanResult(
+      cardId: 'UNKNOWN',
+      cardName: cleanText.isNotEmpty ? cleanText : 'Unknown Card',
+      confidence: 0.3,
+      imageUrl: null,
+      scanTime: DateTime.now(),
+    );
+  }
+
+  Future<ScanResult> _createScanResultFromCardId(String cardId, double confidence) async {
+    try {
+      final card = await _cardApiService.getCardById(cardId);
+      if (card != null) {
+        return _createScanResultFromCard(card, confidence);
+      }
+    } catch (e) {
+      // Card not found in API
+    }
+
+    return ScanResult(
+      cardId: cardId,
+      cardName: 'Card Not Found',
+      confidence: confidence,
+      imageUrl: null,
+      scanTime: DateTime.now(),
+    );
+  }
+
+  ScanResult _createScanResultFromCard(Card card, double confidence) {
+    return ScanResult(
+      cardId: card.id,
+      cardName: card.name,
+      confidence: confidence,
+      imageUrl: card.imageUrl,
+      scanTime: DateTime.now(),
+      card: card,
+    );
+  }
+
+  InputImage? _inputImageFromCameraImage(CameraImage cameraImage) {
+    // This is a simplified implementation
+    // In a real app, you'd need to properly convert CameraImage to InputImage
+    // considering the format, rotation, and plane data
+    try {
+      final inputImageData = InputImageData(
+        size: Size(cameraImage.width.toDouble(), cameraImage.height.toDouble()),
+        imageRotation: InputImageRotation.rotation0deg,
+        format: InputImageFormat.nv21,
+        bytes: cameraImage.planes[0].bytes,
+      );
+
+      return InputImage.fromBytes(bytes: cameraImage.planes[0].bytes, inputImageData: inputImageData);
+    } catch (e) {
+      return null;
     }
   }
 
