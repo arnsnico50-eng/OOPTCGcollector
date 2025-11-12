@@ -90,43 +90,69 @@ class ScannerResultWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Card image
-              Container(
-                width: 100,
-                height: 140,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey[300],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: scanResult.imageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: scanResult.imageUrl!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: CircularProgressIndicator(),
+          InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  context.pushNamed(
+                    AppConstants.cardDetailRouteName,
+                    pathParameters: {'cardId': scanResult.cardId},
+                  );
+                },
+                child: Container(
+                  width: 100,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey[300],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      children: [
+                        if (scanResult.imageUrl != null)
+                          CachedNetworkImage(
+                            imageUrl: scanResult.imageUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
                             ),
+                            errorWidget: (context, url, error) => Container(
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 32,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )
+                        else
+                          const Icon(
+                            Icons.image,
+                            size: 48,
+                            color: Colors.grey,
                           ),
-                          errorWidget: (context, url, error) => Container(
-                            color: Colors.grey[300],
+                        Positioned(
+                          bottom: 4,
+                          right: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
                             child: const Icon(
-                              Icons.image_not_supported,
-                              size: 32,
-                              color: Colors.grey,
+                              Icons.zoom_in,
+                              color: Colors.white,
+                              size: 16,
                             ),
                           ),
-                        )
-                      : const Icon(
-                          Icons.image,
-                          size: 48,
-                          color: Colors.grey,
                         ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
