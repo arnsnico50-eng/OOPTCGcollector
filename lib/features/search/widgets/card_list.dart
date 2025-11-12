@@ -68,10 +68,9 @@ class CardWidget extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.pushNamed(
-            context,
-            '/card_detail',
-            arguments: card,
+          context.pushNamed(
+            AppConstants.cardDetailRouteName,
+            pathParameters: {'cardId': card.id},
           );
         },
         child: Column(
