@@ -8,6 +8,8 @@ class AppConstants {
   static const String scannerRouteName = 'scanner';
   static const String settingsRoute = '/settings';
   static const String settingsRouteName = 'settings';
+  static const String cardDetailRoute = '/card/:cardId';
+  static const String cardDetailRouteName = 'card_detail';
 
   // API URLs
   static const String optcgApiBaseUrl = 'https://api.optcgapi.com';
