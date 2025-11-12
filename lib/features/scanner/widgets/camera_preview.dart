@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:camera/camera.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../providers/scanner_provider.dart';
 
 class CameraPreviewWidget extends ConsumerWidget {
